@@ -79,3 +79,4 @@ References:
 Revisited solved class activities
 Used CHATGPT to verify codes
 Referred to youtube https://www.youtube.com/watch?v=5aYpkLfkgRE videos
+Christopher provided guidance in the tutor sessions for Flask relates queries

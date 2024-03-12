@@ -1,5 +1,15 @@
 # Import the dependencies.
+import numpy as np
+import pandas as pd
+import datetime as dt
 
+# Python SQL and ORM
+import sqlalchemy
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine, func
+
+from flask import Flask, jsonify
 
 
 #################################################
@@ -7,23 +17,25 @@
 #################################################
 
 # Create engine using the `hawaii.sqlite` database file
-
+engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 # Declare a Base using `automap_base()`
-
+Base = automap_base()
 # Use the Base class to reflect the database tables
-
+Base.prepare(engine, reflect=True)
+Base.classes.keys()
 
 # Assign the measurement class to a variable called `Measurement` and
 # the station class to a variable called `Station`
-
+Measurement = Base.classes.measurement
+Station = Base.classes.station
 
 # Create a session
 
-
+session= Session(engine)
 #################################################
 # Flask Setup
 #################################################
-from flask import Flask
+#from flask import Flask
 app = Flask(__name__)
 
 
@@ -60,10 +72,9 @@ def precipitation():
     print(f"Results for Precipitation - {query_dict}")
     print("Out of Precipitation section.")
     return jsonify(query_dict) 
+    session.close()
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
 
 #List the station route.
 
@@ -72,7 +83,7 @@ def stations():
     session = Session(engine)
     sel = [Station.station, Station.name, Station.latitude, Station.longitude, Station.elevation]
     queryresult = session.query(*sel).all()
-    session.close()
+    
 
     stations = []
     for station,name,lat,lon,el in queryresult:
@@ -83,7 +94,8 @@ def stations():
         station_dict["Lon"] = lon
         station_dict["Elevation"] = el
         stations.append(station_dict)
-
+    return jsonify(stations)
+    session.close()
 #List the tobs route.
 @app.route("/api/v1.0/tobs")
 def tobs():
@@ -102,8 +114,8 @@ def tobs():
          tob_obs.append(tobs_dict)
 
      return jsonify(tob_obs)
+     session.close()
 
-     return jsonify(stations)
 #List the start route.
 @app.route("/api/v1.0/<start>")
 
@@ -111,7 +123,7 @@ def get_temp_start(start):
     session = Session(engine)
     results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
               filter(Measurement.date >= start).all()
-    session.close()
+    
 
     temps = []
     for TMIN, TAVG, TMAX in results:
@@ -122,14 +134,14 @@ def get_temp_start(start):
         temps.append(temps_dict)
 
     return jsonify(temps)
-
+    session.close()
 #List the end route.
 @app.route("/api/v1.0/<start>/<end>")
 def get_temp_end(start, end):
     session = Session(engine)
     results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
               filter(Measurement.date >= start).filter(Measurement.date <= end).all()
-    session.close()
+    
 
     temps = []
     for TMIN, TAVG, TMAX in results:
@@ -140,7 +152,7 @@ def get_temp_end(start, end):
         temps.append(temps_dict)
 
     return jsonify(temps)
-
+    session.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
